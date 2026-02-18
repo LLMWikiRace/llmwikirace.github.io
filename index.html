@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wiki Race Benchmark</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        /* body { font-family: 'Inter', sans-serif; background-color: #0a0a0a; color: #e5e5e5; } */
+        body { font-family: 'Inter', sans-serif; background-color: #000000; color: #e5e5e5; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0a0a0a; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #444; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(10px);
+        }
+        .section-heading {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 1.5rem;
+            padding-left: 1rem;
+            border-left: 4px solid;
+        }
+        .plot-container {
+            background: rgba(0, 0, 0, 1);
+            /* background: rgba(255, 255, 255, 0.06); */
+            /* border: 1px solid rgba(255, 255, 255, 0.08); */
+            border-radius: 0.75rem;
+            overflow: hidden;
+            /* padding: 1rem; */
+        }
+        .plot-container img {
+            width: 100%;
+            height: auto;
+            border-radius: 0.5rem;
+        }
+        .plot-caption {
+            margin-top: 0.75rem;
+            font-size: 0.9375rem;
+            color: #a1a1aa;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body class="antialiased min-h-screen flex flex-col">
+
+
+    <main class="flex-grow container mx-auto px-4 py-12 max-w-6xl">
+        
+        <section class="text-center mb-16">
+            <h1 class="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">LLM-WikiRace Benchmark: How Far Can LLMs Plan over Real-World Knowledge Graphs?</h1>
+            <div class="text-lg text-gray-400 leading-relaxed text-center max-w-3xl mx-auto mt-4">
+                <p>
+                    Juliusz Ziomek<sup class="text-white">*</sup>, William Bankes<sup class="text-white">*</sup>, Lorenz Wolf, Shyam Sundhar Ramesh, Xiaohang Tang, Ilija Bogunovic
+                </p>
+            </div>
+            <!-- Affiliations -->
+            <div class="mt-12 text-center">
+
+                <p class="text-sm text-gray-400 uppercase tracking-wider mb-6">
+                    Developed by a team from
+                </p>
+
+                <div class="flex flex-wrap items-center justify-center gap-10">
+
+                    <img src="assets/oxford_final.png"
+                        alt="University 1 logo"
+                        class="h-20 md:h-22 w-auto object-contain opacity-100">
+
+                    <img src="assets/ucl_final.jpg"
+                        alt="University 2 logo"
+                        class="h-20 md:h-22 w-auto object-contain opacity-100">
+
+                    <img src="assets/basel_final.png"
+                        alt="University 3 logo"
+                        class="h-20 md:h-22 w-auto object-contain opacity-100">
+
+                </div>
+
+                <p class="text-xs text-gray-500 mt-6">
+                    Logos displayed to indicate institutional affiliations of the authors.
+                </p>
+
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 mt-8">
+                <a href="https://github.com/JuliuszZiomek/LLM-WikiRace-Benchmark" target="_blank" class="group px-8 py-4 bg-white/10 border border-white/15 rounded-xl font-bold text-white hover:bg-white/14 hover:border-white/20 hover:scale-[1.02] transition-all duration-200 flex items-center gap-3 w-full sm:w-auto justify-center">
+                    <i data-lucide="file-text" class="w-5 h-5 group-hover:-translate-y-0.5 transition-transform"></i>
+                    <span>Read the Paper</span>
+                </a>
+
+                <a href="https://github.com/JuliuszZiomek/LLM-WikiRace-Benchmark" target="_blank" class="group px-8 py-4 bg-white/10 border border-white/15 rounded-xl font-bold text-white hover:bg-white/14 hover:border-white/20 hover:scale-[1.02] transition-all duration-200 flex items-center gap-3 w-full sm:w-auto justify-center">
+                    <i data-lucide="github" class="w-5 h-5 group-hover:rotate-12 transition-transform"></i>
+                    <span>View the Code</span>
+                </a>
+
+            </div>
+        </section>
+        
+        <section class="space-y-8 mb-20">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+                <div class="flex flex-col items-center">
+                    <div class="w-full flex items-center justify-center relative">
+                        <img src="assets/big_models_medium_success_black.png"
+                            alt="Medium Level Results"
+                            class="w-full h-auto object-contain max-h-[400px]"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+
+                        <div class="text-center p-4 absolute inset-0 hidden flex-col items-center justify-center bg-gray-900/80 rounded-lg">
+                            <i data-lucide="alert-triangle" class="w-8 h-8 text-red-400 mb-2"></i>
+                            <p class="text-red-400 text-sm font-mono">File not found</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex flex-col items-center">
+                    <div class="w-full flex items-center justify-center relative">
+                        <img src="assets/big_models_hard_success_black.png"
+                            alt="Hard Level Plot"
+                            class="w-full h-auto object-contain max-h-[400px]"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+
+                        <div class="text-center p-4 absolute inset-0 hidden flex-col items-center justify-center rounded-lg">
+                            <i data-lucide="bar-chart-2" class="w-8 h-8 text-gray-600 mb-2"></i>
+                            <p class="text-gray-600 text-sm">Placeholder</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section class="mb-20 space-y-8">
+            <div class="text-lg text-gray-300 leading-relaxed">
+                <p><span class="text-emerald-400 font-semibold">The Challenge:</span>
+                   In LLM-Wikirace, models must navigate Wikipedia hyperlinks step-by-step to reach a target page from a source page. This requires strategic look-ahead planning and the ability to reason about real-world concepts.
+                </p>
+            </div>
+            <div class="glass-card p-8 rounded-xl">
+                <h3 class="text-white font-semibold mb-4 text-lg">Key Findings:</h3>
+                <ul class="text-gray-200 list-disc pl-5 space-y-3 text-base leading-relaxed">
+                    <li><strong class="text-white">Superhuman on Easy:</strong> Frontier models (Gemini-3, Claude Opus 4.5, and GPT-5.2) dominate simple paths.</li>
+                    <li><strong class="text-white">Planning Gap:</strong> Models with similar world knowledge exhibit a significant performance gap.</li>
+                    <li><strong class="text-white">The Loop Problem:</strong> Models struggle to replan after failure, frequently becoming stuck in navigation loops.</li>
+                </ul>
+            </div>
+        </section>
+
+
+        <section class="mb-20">
+            <h2 class="section-heading border-teal-500">Methodology Overview</h2>
+            <div class="plot-container p-0">
+                <img src="assets/illustration.png"
+                    alt="LLM-Wikirace Methodology Illustration"
+                    class="w-full h-auto object-cover rounded-xl">
+            </div>
+            <div class="mt-10 glass-card p-8 rounded-xl">
+            <h3 class="text-white font-semibold mb-6 text-lg">How the Game Works</h3>
+
+            <ul class="space-y-4 text-gray-300 text-base leading-relaxed">
+                <li>
+                    <span class="text-teal-400 font-semibold">Reach The Target</span>
+                    Agent starts from a source page and must reach a target
+                    by selecting one of available hyperlinks step-by-step.
+                </li>
+
+                <li>
+                    <span class="text-teal-400 font-semibold">Partial Observability</span>
+                    The full graph is not visible; the agent must anticipate which intermediate 
+                    concepts will move it closer to target.
+                </li>
+
+                <li>
+                    <span class="text-teal-400 font-semibold">Step Limit</span>
+                    If the agent fails to reach the target within 30 steps, the game ends and the agent loses.
+                </li>
+            </ul>
+        </div>
+    </section>
+        
+
+        <!-- KEY INSIGHTS -->
+        <section class="mb-20">
+            <h2 class="section-heading border-amber-500">Key Insights</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+                <!-- World Knowledge Plot -->
+                <div class="glass-card rounded-xl p-6 flex flex-col">
+                    <h3 class="text-xl font-semibold text-white mb-3">Planning Gap</h3>
+                    <p class="plot-caption mt-0 mb-4">While world knowledge correlates with success, it alone does not explain performance. We observe a transition from a knowledge-limited to a planning-limited regime, where models with comparable knowledge diverge due to failures in replanning and adaptive control.</p>
+                    <div class="plot-container mt-auto">
+                        <img src="assets/World-Model-Experiment-F1-SR-Scatter-Dark-20260211.png"
+                            alt="World Knowledge vs Success Rate — planning capability is the key differentiator">
+                    </div>
+                </div>
+                <!-- Looping Plot -->
+                <div class="glass-card rounded-xl p-6 flex flex-col">
+                    <h3 class="text-xl font-semibold text-white mb-3">How do models plan and adapt?</h3>
+                    <p class="plot-caption mt-0 mb-4">While models adopt sensible high-level strategies we find that ones that enter navigation loops more frequently perform significantly worse. This highlights a core weakness: once an agent takes a wrong turn, it struggles to replan and break out of repetitive cycles.</p>
+                    <div class="plot-container mt-auto">
+                        <!-- <img src="looping_plot_2.png" -->
+                        <img src="assets/loop_plot.png"
+                            alt="Loop Frequency vs Success Rate — models that loop more perform worse">
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- TABLE SECTION -->
+        <section class="max-w-6xl mx-auto mb-20">
+                <h2 class="section-heading border-purple-500">Leaderboard</h2>
+                <div class="overflow-x-auto glass-card rounded-xl">
+                    <table id="benchmarkTable" class="w-full text-base text-left text-gray-300">
+                        <thead class="text-sm text-gray-200 uppercase bg-white/5 border-b border-white/10">
+                            <tr>
+                                <th scope="col" class="px-6 py-4 cursor-pointer hover:text-white select-none" onclick="sortTable(0)">
+                                    Model <span id="icon-0" class="ml-1 text-gray-500">↕</span>
+                                </th>
+                                <th scope="col" class="px-6 py-4 cursor-pointer hover:text-white select-none" onclick="sortTable(1)">
+                                    Easy Success <span id="icon-1" class="ml-1 text-gray-500">↕</span>
+                                </th>
+                                <th scope="col" class="px-6 py-4 cursor-pointer hover:text-white select-none" onclick="sortTable(2)">
+                                    Medium Success <span id="icon-2" class="ml-1 text-gray-500">↕</span>
+                                </th>
+                                <th scope="col" class="px-6 py-4 cursor-pointer hover:text-white select-none" onclick="sortTable(3)">
+                                    Hard Success <span id="icon-3" class="ml-1 text-gray-500">↕</span>
+                                </th>
+                                <th scope="col" class="px-6 py-4 cursor-pointer hover:text-white select-none" onclick="sortTable(4)">
+                                    Tokens / Step <span id="icon-4" class="ml-1 text-gray-500">↕</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">GPT-5 Nano</th>
+                            <td class="px-6 py-4 font-semibold">71.5%</td>
+                            <td class="px-6 py-4 font-semibold">24.7%</td>
+                            <td class="px-6 py-4 font-semibold">4.0%</td>
+                            <td class="px-6 py-4">2170</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">GPT-5 Mini</th>
+                            <td class="px-6 py-4 font-semibold">85.5%</td>
+                            <td class="px-6 py-4 font-semibold">46.0%</td>
+                            <td class="px-6 py-4 font-semibold">11.0%</td>
+                            <td class="px-6 py-4">874</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">GPT-5</th>
+                            <td class="px-6 py-4 font-semibold">92.5%</td>
+                            <td class="px-6 py-4 font-semibold">60.0%</td>
+                            <td class="px-6 py-4 font-semibold">15.0%</td>
+                            <td class="px-6 py-4">1826</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Gemini 2.0 Flash</th>
+                            <td class="px-6 py-4 font-semibold">88.0%</td>
+                            <td class="px-6 py-4 font-semibold">41.3%</td>
+                            <td class="px-6 py-4 font-semibold">6.0%</td>
+                            <td class="px-6 py-4">501</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Gemini 2.5 Flash</th>
+                            <td class="px-6 py-4 font-semibold">91.0%</td>
+                            <td class="px-6 py-4 font-semibold">53.0%</td>
+                            <td class="px-6 py-4 font-semibold">10.2%</td>
+                            <td class="px-6 py-4">547</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Gemini 2.5</th>
+                            <td class="px-6 py-4 font-semibold">91.0%</td>
+                            <td class="px-6 py-4 font-semibold">56.7%</td>
+                            <td class="px-6 py-4 font-semibold">15.2%</td>
+                            <td class="px-6 py-4">527</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Gemini 3</th>
+                            <td class="px-6 py-4 font-semibold">95.0%</td>
+                            <td class="px-6 py-4 font-semibold">66.0%</td>
+                            <td class="px-6 py-4 font-semibold">23.0%</td>
+                            <td class="px-6 py-4">1848</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Claude Sonnet 4.5</th>
+                            <td class="px-6 py-4 font-semibold">88.5%</td>
+                            <td class="px-6 py-4 font-semibold">43.3%</td>
+                            <td class="px-6 py-4 font-semibold">10.1%</td>
+                            <td class="px-6 py-4">1242</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Claude Opus 4.5</th>
+                            <td class="px-6 py-4 font-semibold">91.5%</td>
+                            <td class="px-6 py-4 font-semibold">56.0%</td>
+                            <td class="px-6 py-4 font-semibold">18.0%</td>
+                            <td class="px-6 py-4">1906</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Grok 4.1-Fast</th>
+                            <td class="px-6 py-4 font-semibold">90.0%</td>
+                            <td class="px-6 py-4 font-semibold">44.7%</td>
+                            <td class="px-6 py-4 font-semibold">5.0%</td>
+                            <td class="px-6 py-4">4458</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">DeepSeek R1</th>
+                            <td class="px-6 py-4 font-semibold">91.0%</td>
+                            <td class="px-6 py-4 font-semibold">54.7%</td>
+                            <td class="px-6 py-4 font-semibold">17.0%</td>
+                            <td class="px-6 py-4">2598</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Kimi K2</th>
+                            <td class="px-6 py-4 font-semibold">87.5%</td>
+                            <td class="px-6 py-4 font-semibold">45.3%</td>
+                            <td class="px-6 py-4 font-semibold">7.0%</td>
+                            <td class="px-6 py-4">8105</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">LLaMA 3 1B</th>
+                            <td class="px-6 py-4 font-semibold">16.5%</td>
+                            <td class="px-6 py-4 font-semibold">0.0%</td>
+                            <td class="px-6 py-4 font-semibold">0.0%</td>
+                            <td class="px-6 py-4">511</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">LLaMA 3 3B</th>
+                            <td class="px-6 py-4 font-semibold">47.0%</td>
+                            <td class="px-6 py-4 font-semibold">3.3%</td>
+                            <td class="px-6 py-4 font-semibold">0.0%</td>
+                            <td class="px-6 py-4">783</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">LLaMA 3 8B</th>
+                            <td class="px-6 py-4 font-semibold">64.5%</td>
+                            <td class="px-6 py-4 font-semibold">9.3%</td>
+                            <td class="px-6 py-4 font-semibold">0.0%</td>
+                            <td class="px-6 py-4">641</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">LLaMA 3 70B</th>
+                            <td class="px-6 py-4 font-semibold">84.5%</td>
+                            <td class="px-6 py-4 font-semibold">39.3%</td>
+                            <td class="px-6 py-4 font-semibold">7.0%</td>
+                            <td class="px-6 py-4">651</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Gemma 3 4B</th>
+                            <td class="px-6 py-4 font-semibold">48.0%</td>
+                            <td class="px-6 py-4 font-semibold">2.7%</td>
+                            <td class="px-6 py-4 font-semibold">0.0%</td>
+                            <td class="px-6 py-4">555</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Gemma 3 12B</th>
+                            <td class="px-6 py-4 font-semibold">72.5%</td>
+                            <td class="px-6 py-4 font-semibold">22.7%</td>
+                            <td class="px-6 py-4 font-semibold">1.0%</td>
+                            <td class="px-6 py-4">651</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Gemma 3 27B</th>
+                            <td class="px-6 py-4 font-semibold">80.0%</td>
+                            <td class="px-6 py-4 font-semibold">30.0%</td>
+                            <td class="px-6 py-4 font-semibold">0.0%</td>
+                            <td class="px-6 py-4">684</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Apertus 8B</th>
+                            <td class="px-6 py-4 font-semibold">42.0%</td>
+                            <td class="px-6 py-4 font-semibold">4.0%</td>
+                            <td class="px-6 py-4 font-semibold">0.0%</td>
+                            <td class="px-6 py-4">805</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Apertus 70B</th>
+                            <td class="px-6 py-4 font-semibold">65.0%</td>
+                            <td class="px-6 py-4 font-semibold">10.7%</td>
+                            <td class="px-6 py-4 font-semibold">0.0%</td>
+                            <td class="px-6 py-4">1832</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Mistral 7B</th>
+                            <td class="px-6 py-4 font-semibold">59.0%</td>
+                            <td class="px-6 py-4 font-semibold">10.0%</td>
+                            <td class="px-6 py-4 font-semibold">1.0%</td>
+                            <td class="px-6 py-4">664</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Ministral 8B</th>
+                            <td class="px-6 py-4 font-semibold">65.5%</td>
+                            <td class="px-6 py-4 font-semibold">8.7%</td>
+                            <td class="px-6 py-4 font-semibold">0.0%</td>
+                            <td class="px-6 py-4">624</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Qwen 2.5-7B</th>
+                            <td class="px-6 py-4 font-semibold">22.5%</td>
+                            <td class="px-6 py-4 font-semibold">1.3%</td>
+                            <td class="px-6 py-4 font-semibold">0.0%</td>
+                            <td class="px-6 py-4">2597</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Dream-v0-Inst. 7B</th>
+                            <td class="px-6 py-4 font-semibold">53.0%</td>
+                            <td class="px-6 py-4 font-semibold">3.3%</td>
+                            <td class="px-6 py-4 font-semibold">1.0%</td>
+                            <td class="px-6 py-4">1549</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">LLaDA-Inst. 8B</th>
+                            <td class="px-6 py-4 font-semibold">40.5%</td>
+                            <td class="px-6 py-4 font-semibold">4.7%</td>
+                            <td class="px-6 py-4 font-semibold">0.0%</td>
+                            <td class="px-6 py-4">1669</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <script>
+                let currentSort = { column: 3, direction: 'desc' };
+
+                // --- NEW Function to calculate color based on percentage ---
+                function getColorForPercentage(value) {
+                    // Ensure value is between 0 and 100
+                    value = Math.max(0, Math.min(100, value));
+                    // Map 0-100 to a Hue range (0 is Red, ~130 is Emerald Green)
+                    const hue = (value / 100) * 130;
+                    // High saturation, medium-high lightness for visibility on dark bg
+                    return `hsl(${hue}, 85%, 60%)`;
+                }
+
+                // --- NEW Function to apply colors to the table cells ---
+                function applyColorsToTable() {
+                    const table = document.getElementById("benchmarkTable");
+                    const tbody = table.getElementsByTagName("tbody")[0];
+                    const rows = tbody.getElementsByTagName("tr");
+
+                    for (let i = 0; i < rows.length; i++) {
+                        const cells = rows[i].getElementsByTagName("td");
+                        // We only want to color columns 0, 1, and 2 of the TD elements 
+                        // (which correspond to Easy, Medium, Hard)
+                        for (let j = 0; j < 3; j++) {
+                            const cell = cells[j];
+                            const text = cell.innerText.trim();
+                            const value = parseFloat(text.replace('%', ''));
+                            
+                            if (!isNaN(value)) {
+                                cell.style.color = getColorForPercentage(value);
+                            }
+                        }
+                    }
+                }
+
+                function sortTable(columnIndex, forceDirection = null) {
+                    const table = document.getElementById("benchmarkTable");
+                    const tbody = table.getElementsByTagName("tbody")[0];
+                    const rows = Array.from(tbody.getElementsByTagName("tr"));
+                    
+                    let direction = 'desc';
+                    if (forceDirection) {
+                        direction = forceDirection;
+                    } else if (currentSort.column === columnIndex && currentSort.direction === 'desc') {
+                        direction = 'asc';
+                    }
+
+                    for (let i = 0; i < 5; i++) {
+                        document.getElementById(`icon-${i}`).innerHTML = '↕';
+                        document.getElementById(`icon-${i}`).className = 'ml-1 text-gray-500';
+                    }
+                    const icon = document.getElementById(`icon-${columnIndex}`);
+                    icon.innerHTML = direction === 'asc' ? '▲' : '▼';
+                    icon.className = 'ml-1 text-white';
+
+                    rows.sort((a, b) => {
+                        let cellA, cellB;
+                        if (columnIndex === 0) {
+                            cellA = a.getElementsByTagName("th")[0];
+                            cellB = b.getElementsByTagName("th")[0];
+                        } else {
+                            cellA = a.getElementsByTagName("td")[columnIndex - 1];
+                            cellB = b.getElementsByTagName("td")[columnIndex - 1];
+                        }
+
+                        let valA = cellA.innerText.trim();
+                        let valB = cellB.innerText.trim();
+                        const numA = parseFloat(valA.replace(/%/g, '').replace(/,/g, ''));
+                        const numB = parseFloat(valB.replace(/%/g, '').replace(/,/g, ''));
+
+                        if (!isNaN(numA) && !isNaN(numB)) {
+                            return direction === 'asc' ? numA - numB : numB - numA;
+                        } else {
+                            return direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                        }
+                    });
+
+                    rows.forEach(row => tbody.appendChild(row));
+                    currentSort = { column: columnIndex, direction: direction };
+                }
+
+                window.onload = function() {
+                    // 1. Sort by "Hard Success" descending on load
+                    sortTable(3, 'desc'); 
+                    // 2. Apply colors after the initial sort
+                    applyColorsToTable(); 
+                };
+            </script>
+        </section>
+        <!-- <section class="mb-20">
+            <h2 class="section-heading border-purple-500">Model Performance & Usage</h2>
+            <div class="overflow-x-auto glass-card rounded-xl">
+                <table class="w-full text-base text-left text-gray-300">
+                    <thead class="text-sm text-gray-200 uppercase bg-white/5 border-b border-white/10">
+                        <tr>
+                            <th scope="col" class="px-6 py-4">Model</th>
+                            <th scope="col" class="px-6 py-4">Easy Success</th>
+                            <th scope="col" class="px-6 py-4">Medium Success</th>
+                            <th scope="col" class="px-6 py-4">Hard Success</th>
+                            <th scope="col" class="px-6 py-4">Tokens</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Gemini 3</th>
+                            <td class="px-6 py-4">95.0%</td>
+                            <td class="px-6 py-4">66.0%</td>
+                            <td class="px-6 py-4">23.0%</td>
+                            <td class="px-6 py-4">1848</td>
+                        </tr> 
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Gemini 2.0 Flash</th>
+                            <td class="px-6 py-4">88.0%</td>
+                            <td class="px-6 py-4">41.3%</td>
+                            <td class="px-6 py-4">6.0%</td>
+                            <td class="px-6 py-4">501</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Gemini 2.5 Flash</th>
+                            <td class="px-6 py-4">91.0%</td>
+                            <td class="px-6 py-4">53.0%</td>
+                            <td class="px-6 py-4">10.2%</td>
+                            <td class="px-6 py-4">547</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Gemini 2.5</th>
+                            <td class="px-6 py-4">91.0%</td>
+                            <td class="px-6 py-4">56.7%</td>
+                            <td class="px-6 py-4">15.2%</td>
+                            <td class="px-6 py-4">527</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">GPT-5 Nano</th>
+                            <td class="px-6 py-4">71.5%</td>
+                            <td class="px-6 py-4">24.7%</td>
+                            <td class="px-6 py-4">4.0%</td>
+                            <td class="px-6 py-4">2170</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">GPT-5 Mini</th>
+                            <td class="px-6 py-4">85.5%</td>
+                            <td class="px-6 py-4">46.0%</td>
+                            <td class="px-6 py-4">11.0%</td>
+                            <td class="px-6 py-4">874</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">GPT-5</th>
+                            <td class="px-6 py-4">92.5%</td>
+                            <td class="px-6 py-4">60.0%</td>
+                            <td class="px-6 py-4">15.0%</td>
+                            <td class="px-6 py-4">1826</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Claude Sonnet 4.5</th>
+                            <td class="px-6 py-4">88.5%</td>
+                            <td class="px-6 py-4">43.3%</td>
+                            <td class="px-6 py-4">10.1%</td>
+                            <td class="px-6 py-4">1242</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Claude Opus 4.5</th>
+                            <td class="px-6 py-4">91.5%</td>
+                            <td class="px-6 py-4">56.0%</td>
+                            <td class="px-6 py-4">18.0%</td>
+                            <td class="px-6 py-4">1906</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Grok 4.1-Fast</th>
+                            <td class="px-6 py-4">90.0%</td>
+                            <td class="px-6 py-4">44.7%</td>
+                            <td class="px-6 py-4">5.0%</td>
+                            <td class="px-6 py-4">4458</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">DeepSeek R1</th>
+                            <td class="px-6 py-4">91.0%</td>
+                            <td class="px-6 py-4">54.7%</td>
+                            <td class="px-6 py-4">17.0%</td>
+                            <td class="px-6 py-4">2598</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Kimi K2</th>
+                            <td class="px-6 py-4">87.5%</td>
+                            <td class="px-6 py-4">45.3%</td>
+                            <td class="px-6 py-4">7.0%</td>
+                            <td class="px-6 py-4">8105</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">LLaMA 3 1B</th>
+                            <td class="px-6 py-4">16.5%</td>
+                            <td class="px-6 py-4">0.0%</td>
+                            <td class="px-6 py-4">0.0%</td>
+                            <td class="px-6 py-4">511</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">LLaMA 3 3B</th>
+                            <td class="px-6 py-4">47.0%</td>
+                            <td class="px-6 py-4">3.3%</td>
+                            <td class="px-6 py-4">0.0%</td>
+                            <td class="px-6 py-4">783</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">LLaMA 3 8B</th>
+                            <td class="px-6 py-4">64.5%</td>
+                            <td class="px-6 py-4">9.3%</td>
+                            <td class="px-6 py-4">0.0%</td>
+                            <td class="px-6 py-4">641</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">LLaMA 3 70B</th>
+                            <td class="px-6 py-4">84.5%</td>
+                            <td class="px-6 py-4">39.3%</td>
+                            <td class="px-6 py-4">7.0%</td>
+                            <td class="px-6 py-4">651</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Gemma 3 4B</th>
+                            <td class="px-6 py-4">48.0%</td>
+                            <td class="px-6 py-4">2.7%</td>
+                            <td class="px-6 py-4">0.0%</td>
+                            <td class="px-6 py-4">555</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Gemma 3 12B</th>
+                            <td class="px-6 py-4">72.5%</td>
+                            <td class="px-6 py-4">22.7%</td>
+                            <td class="px-6 py-4">1.0%</td>
+                            <td class="px-6 py-4">651</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Gemma 3 27B</th>
+                            <td class="px-6 py-4">80.0%</td>
+                            <td class="px-6 py-4">30.0%</td>
+                            <td class="px-6 py-4">0.0%</td>
+                            <td class="px-6 py-4">684</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Apertus 8B</th>
+                            <td class="px-6 py-4">42.0%</td>
+                            <td class="px-6 py-4">4.0%</td>
+                            <td class="px-6 py-4">0.0%</td>
+                            <td class="px-6 py-4">805</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Apertus 70B</th>
+                            <td class="px-6 py-4">65.0%</td>
+                            <td class="px-6 py-4">10.7%</td>
+                            <td class="px-6 py-4">0.0%</td>
+                            <td class="px-6 py-4">1832</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Mistral 7B</th>
+                            <td class="px-6 py-4">59.0%</td>
+                            <td class="px-6 py-4">10.0%</td>
+                            <td class="px-6 py-4">1.0%</td>
+                            <td class="px-6 py-4">664</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Ministral 8B</th>
+                            <td class="px-6 py-4">65.5%</td>
+                            <td class="px-6 py-4">8.7%</td>
+                            <td class="px-6 py-4">0.0%</td>
+                            <td class="px-6 py-4">624</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Qwen 2.5-7B</th>
+                            <td class="px-6 py-4">22.5%</td>
+                            <td class="px-6 py-4">1.3%</td>
+                            <td class="px-6 py-4">0.0%</td>
+                            <td class="px-6 py-4">2597</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">Dream-v0-Inst. 7B</th>
+                            <td class="px-6 py-4">53.0%</td>
+                            <td class="px-6 py-4">3.3%</td>
+                            <td class="px-6 py-4">1.0%</td>
+                            <td class="px-6 py-4">1549</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">LLaDA-Inst. 8B</th>
+                            <td class="px-6 py-4">40.5%</td>
+                            <td class="px-6 py-4">4.7%</td>
+                            <td class="px-6 py-4">0.0%</td>
+                            <td class="px-6 py-4">1669</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section> -->
+
+        <!-- CITATION -->
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            <div class="md:col-span-2">
+                <h3 class="text-base font-semibold text-gray-300 uppercase tracking-wider mb-3">Citation</h3>
+                <div class="relative group">
+                    <pre class="bg-[#111] p-4 rounded-lg border border-white/10 text-sm text-gray-400 font-mono overflow-x-auto whitespace-pre-wrap">
+@article{wikirace2026,
+  title={LLM-WikiRace Benchmark: How Far Can LLMs Plan over Real-World Knowledge Graphs?},
+  author={Juliusz Ziomek<sup class="text-white">*</sup>, William Bankes<sup class="text-white">*</sup>, Lorenz Wolf, Shyam Sundhar Ramesh, Xiaohang Tang, Ilija Bogunovic},
+  journal={arXiv preprint},
+  year={2026}
+}</pre>
+                    <button onclick="copyCitation()" class="absolute top-2 right-2 p-2 bg-white/10 hover:bg-white/20 rounded text-white transition opacity-0 group-hover:opacity-100" title="Copy to Clipboard">
+                        <i data-lucide="copy" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex flex-col justify-center gap-4">
+                <a href="https://github.com/JuliuszZiomek/LLM-WikiRace-Benchmark" target="_blank" class="flex items-center justify-center gap-2 px-6 py-3 bg-white text-black font-semibold rounded-lg hover:bg-gray-200 transition text-base">
+                    <i data-lucide="github" class="w-5 h-5"></i>
+                    View on GitHub
+                </a>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="border-t border-white/10 py-8 text-center">
+        <p class="text-gray-500 text-base">© 2026 Wiki Race Team. Hosted on GitHub Pages.</p>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+        function copyCitation() {
+            const citationText = `@article{wikirace2026,
+  title={LLM-Wikirace: A Benchmark for Planning and Reasoning over Real-World Knowledge Graphs},
+  author={Juliusz Ziomek, William Bankes, Lorenz Wolf, Shyam Sundhar Ramesh, Xiaohang Tang, Ilija Bogunovic},
+  journal={arXiv preprint},
+  year={2026}
+}`;
+            navigator.clipboard.writeText(citationText).then(() => { alert("Citation copied!"); });
+        }
+    </script>
+</body>
+</html>
