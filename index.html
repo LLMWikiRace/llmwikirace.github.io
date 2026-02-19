@@ -169,23 +169,24 @@
             <ul class="space-y-4 text-gray-300 text-base leading-relaxed">
                 <li>
                     <span class="text-teal-400 font-semibold">Reach The Target</span>
-                    Agent starts from a source page and must reach a target
-                    by selecting one of available hyperlinks step-by-step.
+                    The objective is to reach a target page, starting with a given source page. At each step, the agent receives a list of the outgoing hyperlinks from current page and must select one link to follow, which moves it to a new page.
+                </li>
+                 <li>
+                    <span class="text-teal-400 font-semibold">Step Limit</span>
+                     If the agent fails to reach the target within 30 steps, the game ends and the agent loses.
                 </li>
 
                 <li>
                     <span class="text-teal-400 font-semibold">Partial Observability</span>
-                    The full graph is not visible; the agent must anticipate which intermediate 
-                    concepts will move it closer to target.
+                    At each step only the next available links in the hyperlink graph are given to the agent. The agent must infer the rest of the graph structure using it’s own internal world knowledge and make current decision under uncertainty.
                 </li>
 
                 <li>
-                    <span class="text-teal-400 font-semibold">Step Limit</span>
-                    If the agent fails to reach the target within 30 steps, the game ends and the agent loses.
+                    <span class="text-teal-400 font-semibold">Varying Difficulties</span>
+                    Benchmark features three difficulties: Easy, Medium, and Hard, defined by the shortest-path distance between source and target pages. Whilst models perform well at the Easy difficulty, the Hard difficulty reveals flaws in their long-horizon planning.
                 </li>
             </ul>
         </div>
-    </section>
         
 
         <!-- KEY INSIGHTS -->
