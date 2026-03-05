@@ -47,6 +47,21 @@
             color: #a1a1aa;
             line-height: 1.6;
         }
+        /* tiny NEW badge (fits your dark theme) */
+        .new-badge {
+        display: inline-block;
+        margin-left: 0.5rem;
+        padding: 0.12rem 0.5rem;
+        font-size: 0.72rem;
+        font-weight: 700;
+        line-height: 1;
+        color: #002215;
+        background: linear-gradient(180deg,#7df9b8,#38d8a0);
+        border-radius: 999px;
+        vertical-align: middle;
+        box-shadow: 0 1px 0 rgba(0,0,0,0.25);
+        user-select: none;
+        }
     </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col">
@@ -240,8 +255,39 @@
                                     Tokens / Step <span id="icon-4" class="ml-1 text-gray-500">↕</span>
                                 </th>
                             </tr>
-                        </thead>
+                        </thead>                                                                                                                                      
                         <tbody>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">
+                            Claude Opus 4.6  
+                            <span class="new-badge" aria-label="New">NEW</span>
+                            </th>
+                            <td class="px-6 py-4 font-semibold">91.0 %</td>
+                            <td class="px-6 py-4 font-semibold">56.7 %</td>
+                            <td class="px-6 py-4 font-semibold">16.0 %</td>
+                            <td class="px-6 py-4">1354</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">
+                            GPT-5.2   
+                            <span class="new-badge" aria-label="New">NEW</span>
+                            </th>
+                            <td class="px-6 py-4 font-semibold">90.0 %</td>
+                            <td class="px-6 py-4 font-semibold">50.7 %</td>
+                            <td class="px-6 py-4 font-semibold">10.0 %</td>
+                            <td class="px-6 py-4">1008</td>
+                        </tr>
+                        <tr class="border-b border-white/5 hover:bg-white/5 transition">
+                            <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">
+                            Gemini 3.1  
+                            <span class="new-badge" aria-label="New">NEW</span>
+                            </th>
+                            <td class="px-6 py-4 font-semibold">96.0 %</td>
+                            <td class="px-6 py-4 font-semibold">69.8 %</td>
+                            <td class="px-6 py-4 font-semibold">29.0  %</td>
+                            <td class="px-6 py-4">1905</td>
+                        </tr>
+                            
                         <tr class="border-b border-white/5 hover:bg-white/5 transition">
                             <th scope="row" class="px-6 py-4 font-medium text-white whitespace-nowrap">GPT-5 Nano</th>
                             <td class="px-6 py-4 font-semibold">71.5%</td>
